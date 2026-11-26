@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenBG — free remove.bg replacement</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --panel-2: #1c232c;
+      --border: #2a313c;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-2: #3fb950;
+      --danger: #f85149;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+    header { text-align: center; margin-bottom: 28px; }
+    h1 { font-size: 34px; margin: 0 0 8px; letter-spacing: -0.02em; }
+    h1 .mark { color: var(--accent); }
+    .tagline { color: var(--muted); margin: 0 0 12px; }
+    .badges { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .badge { background: var(--panel); border: 1px solid var(--border); padding: 3px 10px;
+      border-radius: 999px; font-size: 12px; color: var(--muted); }
+    .badge b { color: var(--accent-2); }
+    .panel { background: var(--panel); border: 1px solid var(--border);
+      border-radius: 14px; padding: 24px; margin: 24px 0; }
+    .drop { border: 2px dashed var(--border); border-radius: 12px; padding: 40px 20px;
+      text-align: center; transition: border-color .15s, background .15s; cursor: pointer; }
+    .drop:hover { border-color: var(--accent); background: var(--panel-2); }
+    .drop.drag { border-color: var(--accent); background: rgba(88,166,255,.08); }
+    .drop p { margin: 0 0 4px; }
+    .drop .hint { color: var(--muted); font-size: 13px; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; margin-top: 18px; }
+    .field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px; }
+    label { color: var(--muted); font-size: 13px; }
+    select, input[type=color] { background: var(--panel-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 14px; }
+    .btn { background: var(--accent); color: #0d1117; border: 0; border-radius: 8px;
+      padding: 10px 18px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+    .status { margin-top: 16px; color: var(--muted); min-height: 22px; }
+    .status.err { color: var(--danger); }
+    .status.ok { color: var(--accent-2); }
+    .result { margin-top: 18px; display: grid; gap: 12px; }
+    .result img { max-width: 100%; border-radius: 10px; background:
+      repeating-conic-gradient(#1c232c 0% 25%, #161b22 0% 50%) 50% / 24px 24px;
+      border: 1px solid var(--border); }
+    .checkerboard { display: block; }
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 640px) { .cols { grid-template-columns: 1fr; } }
+    .meta { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    details { margin-top: 12px; color: var(--muted); }
+    details summary { cursor: pointer; }
+    footer { color: var(--muted); text-align: center; font-size: 13px; margin-top: 40px; }
+    code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+    .donate { background: var(--panel-2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; margin-top: 12px; }
+    .donate div { margin: 6px 0; word-break: break-all; }
+    .donate code { background: transparent; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Open<span class="mark">BG</span></h1>
+      <p class="tagline">A free, open-source, self-hosted <b>remove.bg</b> replacement.</p>
+      <div class="badges">
+        <span class="badge"><b>MIT</b> licensed</span>
+        <span class="badge">BiRefNet ONNX</span>
+        <span class="badge">No signup</span>
+        <span class="badge">No upload to any server</span>
+        <span class="badge">Self-hosted</span>
+      </div>
+    </header>
+
+    <div class="panel">
+      <div id="drop" class="drop">
+        <p><b>Drop a photo here</b> or click to choose</p>
+        <p class="hint">PNG / JPG / WEBP / BMP — processed locally by your OpenBG server</p>
+        <input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/bmp" hidden />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="size">Output size</label>
+          <select id="size">
+            <option value="auto">auto (full resolution)</option>
+            <option value="preview">preview (≤ 1024 px)</option>
+            <option value="regular">regular (≤ 2048 px)</option>
+            <option value="full">full (no cap)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="format">Output format</label>
+          <select id="format">
+            <option value="auto">auto (transparent PNG)</option>
+            <option value="png">PNG (transparent)</option>
+            <option value="jpg">JPG (opaque)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bg">Background</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="bgmode">
+              <option value="transparent">transparent</option>
+              <option value="solid">solid colour</option>
+            </select>
+            <input id="bg" type="color" value="#ffffff" disabled />
+          </div>
+        </div>
+        <div class="field" style="flex:0 0 auto;">
+          <label>&nbsp;</label>
+          <button id="run" class="btn" disabled>Remove background</button>
+        </div>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <div id="result" class="result" hidden>
+        <div class="cols">
+          <div>
+            <div class="meta">Input</div>
+            <img id="inPreview" alt="input" />
+          </div>
+          <div>
+            <div class="meta">Output</div>
+            <img id="outPreview" class="checkerboard" alt="output" />
+          </div>
+        </div>
+        <div>
+          <a id="download" class="btn" download>Download</a>
+          <button id="again" class="btn secondary">Process another</button>
+        </div>
+        <div id="meta" class="meta"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Why OpenBG?</h3>
+      <p>
+        remove.bg's standalone website and self-serve API shut down on
+        <b>1 December 2026 at 09:00 CET</b>. Background removal moved into
+        Canva (Pro) and the API into Leonardo.Ai. OpenBG exists so anyone
+        can keep doing background removal for free, with source, on their
+        own machine.
+      </p>
+      <p>
+        It runs the <b>BiRefNet-general</b> ONNX model (MIT-licensed) on the
+        ONNX Runtime via Rust. Drop a photo here and your local OpenBG
+        server returns a full-resolution transparent PNG — nothing leaves
+        this machine.
+      </p>
+      <details>
+        <summary>How does the web demo work?</summary>
+        <p>
+          This page talks to the local API server running on this machine
+          (same origin, <code>POST /v1.0/removebg</code>). The image is sent
+          only to your own OpenBG instance — there is no third-party upload.
+          Run it yourself with <code>cargo run --release -- serve --port 8080</code>
+          and open <code>http://localhost:8080/</code>.
+        </p>
+      </details>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Honest limits</h3>
+      <ul style="margin:0; padding-left:20px;">
+        <li>BiRefNet is very good, but slightly worse than remove.bg on fine hair, fur and translucent edges.</li>
+        <li>CPU inference takes a few seconds per image. A CUDA-capable GPU or Apple Silicon makes it dramatically faster.</li>
+        <li>The first run downloads the model (~224 MB by default) into your user cache directory.</li>
+        <li>The API is wire-compatible with remove.bg: existing code keeps working after changing only the URL.</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0;">Donate</h3>
+      <p style="margin-top:0;">OpenBG is free and MIT-licensed. If it saves you a subscription, donations are welcome.</p>
+      <div class="donate">
+        <div><b>TON:</b><br /><code>UQAdlJHWw-2wkhmYEQDVb-bfsNdwKEFfF5T4MtuBSw5GJrdD</code></div>
+        <div><b>EVM (Ethereum/BSC/Polygon):</b><br /><code>0xf38cAF0757B611fD625cA2c392b24D79025D62c9</code></div>
+      </div>
+    </div>
+
+    <footer>
+      OpenBG is open source under the MIT license. Not affiliated with remove.bg, Canva, or Leonardo.Ai.
+    </footer>
+  </div>
+
+  <script>
+    const drop = document.getElementById("drop");
+    const fileInput = document.getElementById("file");
+    const runBtn = document.getElementById("run");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const inPreview = document.getElementById("inPreview");
+    const outPreview = document.getElementById("outPreview");
+    const downloadA = document.getElementById("download");
+    const againBtn = document.getElementById("again");
+    const metaEl = document.getElementById("meta");
+    const sizeSel = document.getElementById("size");
+    const formatSel = document.getElementById("format");
+    const bgModeSel = document.getElementById("bgmode");
+    const bgInput = document.getElementById("bg");
+
+    let currentFile = null;
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text || "";
+      statusEl.className = "status" + (kind ? " " + kind : "");
+    }
+
+    function setFile(f) {
+      currentFile = f;
+      runBtn.disabled = !f;
+      resultEl.hidden = true;
+      if (f) {
+        inPreview.src = URL.createObjectURL(f);
+        setStatus(`Ready: ${f.name} (${(f.size/1024).toFixed(0)} KB)`, "ok");
+      } else {
+        setStatus("");
+      }
+    }
+
+    bgModeSel.addEventListener("change", () => {
+      bgInput.disabled = bgModeSel.value !== "solid";
+    });
+
+    drop.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", e => setFile(e.target.files[0] || null));
+
+    ["dragenter","dragover"].forEach(ev =>
+      drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("drag"); }));
+    ["dragleave","drop"].forEach(ev =>
+      drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("drag"); }));
+    drop.addEventListener("drop", e => {
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) setFile(f);
+    });
+
+    runBtn.addEventListener("click", async () => {
+      if (!currentFile) return;
+      runBtn.disabled = true;
+      setStatus("Removing background… (CPU inference takes a few seconds)", "");
+
+      const fd = new FormData();
+      fd.append("image_file", currentFile, currentFile.name);
+      fd.append("size", sizeSel.value);
+      fd.append("format", formatSel.value);
+      if (bgModeSel.value === "solid") {
+        fd.append("bg_color", bgInput.value);
+      }
+
+      const t0 = performance.now();
+      try {
+        const resp = await fetch("/v1.0/removebg", { method: "POST", body: fd });
+        const t1 = performance.now();
+        if (!resp.ok) {
+          const text = await resp.text();
+          setStatus(`Error ${resp.status}: ${text.slice(0, 200)}`, "err");
+          runBtn.disabled = false;
+          return;
+        }
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        outPreview.src = url;
+        downloadA.href = url;
+        const ext = (resp.headers.get("content-type") || "").includes("jpeg") ? "jpg" : "png";
+        const baseName = currentFile.name.replace(/\.[^.]+$/, "");
+        downloadA.download = `${baseName}-openbg.${ext}`;
+        resultEl.hidden = false;
+        const secs = ((t1 - t0) / 1000).toFixed(1);
+        setStatus(`Done in ${secs}s`, "ok");
+        metaEl.textContent = `${blob.type} — ${(blob.size/1024).toFixed(0)} KB`;
+      } catch (e) {
+        setStatus(`Request failed: ${e}. Is the OpenBG server running on this origin?`, "err");
+      } finally {
+        runBtn.disabled = false;
+      }
+    });
+
+    againBtn.addEventListener("click", () => {
+      resultEl.hidden = true;
+      setFile(null);
+      fileInput.value = "";
+    });
+  </script>
+</body>
+</html>
