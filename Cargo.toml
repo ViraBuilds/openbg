@@ -1,0 +1,34 @@
+[package]
+name = "openbg"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.92"
+license = "MIT"
+description = "Free, open-source, self-hostable remove.bg replacement powered by the MIT-licensed BiRefNet ONNX model."
+repository = "https://github.com/ViraBuilds/openbg"
+keywords = ["background-removal", "onnx", "birefnet", "image", "removebg"]
+categories = ["multimedia::images", "command-line-utilities", "web-programming::http-server"]
+
+[dependencies]
+ort = { version = "2.0.0-rc.15", features = ["download-binaries", "ndarray"] }
+ndarray = "0.17"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "bmp", "webp", "tiff", "rayon"] }
+axum = { version = "0.8", features = ["multipart"] }
+tokio = { version = "1", features = ["full"] }
+tower-http = { version = "0.6", features = ["fs", "cors", "trace"] }
+tower = { version = "0.5", features = ["util"] }
+clap = { version = "4", features = ["derive"] }
+reqwest = { version = "0.12", features = ["blocking", "stream"] }
+anyhow = "1"
+dirs = "5"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+mime = "0.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+futures-util = "0.3"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
