@@ -2,6 +2,10 @@
 
 > A free, open-source, self-hostable **remove.bg** replacement.
 
+![OpenBG web UI — UI preview (illustration)](docs/screenshot.png)
+
+*Web UI preview (illustration of the interface, not a live screenshot).*
+
 OpenBG runs the MIT-licensed [BiRefNet](https://github.com/ZhengPeng7/BiRefNet)
 ONNX model fully on your own machine using Rust + the ONNX Runtime. It ships as
 one binary that can act as a command-line tool, a batch processor, and an HTTP
